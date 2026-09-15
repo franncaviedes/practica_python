@@ -1,0 +1,50 @@
+PS C:\Users\franc\Downloads\Ing Soft 1> curl.exe -i http://localhost:9292/tasks
+HTTP/1.0 200 OK
+Date: Tue, 15 Sep 2026 00:36:35 GMT
+Server: WSGIServer/0.2 CPython/3.8.5
+Content-Type: application/json
+Content-Length: 2
+
+[]
+PS C:\Users\franc\Downloads\Ing Soft 1> curl.exe --% -i -X POST http://localhost:9292/tasks -H "Content-Type: application/json" -d "{\"title\":\"Comprar pan\",\"description\":\"Comprar pan integral\"}"
+HTTP/1.0 201 Created
+Date: Tue, 15 Sep 2026 00:36:45 GMT
+Server: WSGIServer/0.2 CPython/3.8.5
+Content-Type: application/json
+Content-Length: 72
+
+{"id": 1, "title": "Comprar pan", "description": "Comprar pan integral"}
+PS C:\Users\franc\Downloads\Ing Soft 1> curl.exe -i http://localhost:9292/tasks
+HTTP/1.0 200 OK
+Date: Tue, 15 Sep 2026 00:37:03 GMT
+Server: WSGIServer/0.2 CPython/3.8.5
+Content-Type: application/json
+Content-Length: 74
+
+[{"id": 1, "title": "Comprar pan", "description": "Comprar pan integral"}]
+PS C:\Users\franc\Downloads\Ing Soft 1> curl.exe --% -i -X PATCH http://localhost:9292/tasks/1 -H "Content-Type: application/json" -d "{\"title\":\"Comprar leche\"}"
+HTTP/1.0 200 OK
+Date: Tue, 15 Sep 2026 00:37:17 GMT
+Server: WSGIServer/0.2 CPython/3.8.5
+Content-Type: application/json
+Content-Length: 74
+
+{"id": 1, "title": "Comprar leche", "description": "Comprar pan integral"}
+PS C:\Users\franc\Downloads\Ing Soft 1> curl.exe -i -X DELETE http://localhost:9292/tasks/1
+HTTP/1.0 200 OK
+Date: Tue, 15 Sep 2026 00:37:25 GMT
+Server: WSGIServer/0.2 CPython/3.8.5
+Content-Type: application/json
+Content-Length: 30
+
+{"mensaje": "Tarea eliminada"}
+PS C:\Users\franc\Downloads\Ing Soft 1> curl.exe -i http://localhost:9292/tasks/1
+
+HTTP/1.0 404 Not Found
+Date: Tue, 15 Sep 2026 00:37:35 GMT
+Server: WSGIServer/0.2 CPython/3.8.5
+Content-Type: application/json
+Content-Length: 32
+
+{"error": "Tarea no encontrada"}
+PS C:\Users\franc\Downloads\Ing Soft 1> 
