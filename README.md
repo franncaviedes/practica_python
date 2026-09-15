@@ -1,118 +1,131 @@
-## Construcción de un servidor HTTP en Python
+# Servidor HTTP para gestión de tareas
 
-Desarrollar un servidor HTTP utilizando únicamente `wsgiref.simple_server`, sin utilizar frameworks como Flask.
+## Objetivo
 
-El servidor deberá manejar una lista de tareas almacenada en memoria y permitir realizar las operaciones básicas mediante los principales métodos HTTP.
+Desarrollar un servidor HTTP utilizando Python y `wsgiref.simple_server`, sin utilizar frameworks como Flask.
 
-### Endpoints requeridos
-
-* **GET `/tasks`** → Obtener y mostrar todas las tareas. Debe responder con `200 OK`.
-* **GET `/tasks/{id}`** → Consultar una tarea específica. Debe devolver `200 OK` si existe o `404 Not Found` si no se encuentra.
-* **POST `/tasks`** → Agregar una nueva tarea utilizando los datos enviados en formato JSON. Debe responder con `201 Created`.
-* **PATCH `/tasks/{id}`** → Actualizar únicamente los campos enviados de una tarea existente. Debe devolver `200 OK` o `404 Not Found` si la tarea no existe.
-* **DELETE `/tasks/{id}`** → Eliminar una tarea determinada. Debe responder con `200 OK` o `204 No Content` si se elimina correctamente, y `404 Not Found` si no existe.
-
-Todo el desarrollo deberá encontrarse en un único archivo llamado `server.py`.
-
-El servidor deberá ejecutarse localmente en:
+El servidor permite administrar una lista de tareas almacenada en memoria y funciona localmente en:
 
 `http://localhost:9292`
 
-### Manejo de datos
+## Operaciones disponibles
 
-Las solicitudes y respuestas deberán utilizar exclusivamente formato JSON.
+El servidor permite trabajar con las tareas mediante los siguientes métodos HTTP:
 
-Para procesar los datos recibidos se deberá utilizar:
+* **GET `/tasks`**: muestra todas las tareas y responde con `200 OK`.
 
-* `json.loads()` para convertir el JSON recibido.
-* `json.dumps()` para generar las respuestas.
+* **GET `/tasks/{id}`**: busca una tarea específica. Si existe, devuelve `200 OK`; si no existe, devuelve `404 Not Found`.
 
-Todas las respuestas deberán incluir el siguiente encabezado:
+* **POST `/tasks`**: crea una nueva tarea utilizando los datos enviados en formato JSON y responde con `201 Created`.
 
-`Content-Type: application/json`
+* **PATCH `/tasks/{id}`**: modifica solamente los campos enviados de una tarea existente. Los demás datos se mantienen sin cambios. Devuelve `200 OK` o `404 Not Found`.
 
-También se deberán utilizar correctamente los códigos de estado HTTP correspondientes a cada operación.
+* **DELETE `/tasks/{id}`**: elimina una tarea. Si existe, responde con `200 OK`; si no existe, devuelve `404 Not Found`.
 
-Es importante que **PATCH funcione como una actualización parcial**. Es decir, solamente deberá modificar los atributos que se envíen en la solicitud y conservar sin cambios los demás datos de la tarea.
+## Comportamiento de cada método
 
-### Pruebas
+### GET — Consultar
 
-Una vez terminado el servidor, se deberán realizar pruebas utilizando `curl` o el script `demo-verbos-http.sh`.
+GET se utiliza para obtener información y no modifica las tareas.
 
-Las pruebas deberán guardarse como evidencia en un archivo llamado, por ejemplo:
-
-`evidencia.txt`
-
-Entre las pruebas realizadas deberá demostrarse que una tarea puede ser creada, consultada, modificada y finalmente eliminada.
-
-Además, se deberá comprobar específicamente que, después de realizar un `DELETE`, al intentar consultar nuevamente esa misma tarea mediante `GET`, el servidor responda con:
-
-`404 Not Found`
-
-### Comportamiento de cada método HTTP
-
-**GET – Consultar**
-
-GET solamente permite obtener información. No debe realizar modificaciones en el servidor.
-
-Si se ejecuta varias veces la misma consulta, el resultado deberá mantenerse igual mientras no se haya realizado otra operación que modifique los datos.
-
-Ejemplo:
+Por ejemplo:
 
 `GET /tasks/1`
 
-→ Muestra la información correspondiente a la tarea con ID `1`.
+Muestra la información de la tarea que tiene el ID `1`.
 
----
+Si se realiza nuevamente la misma consulta y la tarea no fue modificada, el resultado será el mismo.
 
-**POST – Crear**
+### POST — Crear
 
-POST se utiliza para incorporar una nueva tarea.
+POST se utiliza para crear una tarea nueva.
 
-Cada vez que se realiza una solicitud POST se debe generar un nuevo recurso, por lo que repetir la misma solicitud dará como resultado nuevas tareas con identificadores diferentes.
-
-Ejemplo:
+Por ejemplo:
 
 `POST /tasks`
 
+enviando:
+
 ```json
-{"title": "Comprar pan"}
+{
+  "title": "Comprar pan"
+}
 ```
 
-Si esta operación se realiza dos veces, deberán existir dos tareas independientes, cada una con su propio `id`.
+Cada vez que se realiza un POST se crea una nueva tarea y se le asigna un ID diferente.
 
----
+Por eso, **POST no es idempotente**: si se envía la misma solicitud dos veces, se crean dos tareas diferentes.
 
-**PATCH – Actualizar parcialmente**
+### PATCH — Modificar parcialmente
 
-PATCH permite modificar solamente determinados datos de una tarea existente.
+PATCH permite modificar solamente los datos que se envían.
 
-Los campos que no sean enviados en la solicitud deberán conservar exactamente su valor anterior.
-
-Ejemplo:
+Por ejemplo:
 
 `PATCH /tasks/1`
 
+enviando:
+
 ```json
-{"done": true}
+{
+  "title": "Comprar leche"
+}
 ```
 
-En este caso, la tarea `1` queda marcada como completada, pero el resto de sus datos permanece sin modificaciones.
+En este caso solamente se modifica el título de la tarea. Los demás datos permanecen iguales.
 
-Si se vuelve a enviar exactamente el mismo PATCH, la tarea continuará marcada como completada y no se deberán producir cambios adicionales.
+### DELETE — Eliminar
 
----
+DELETE se utiliza para eliminar una tarea.
 
-**DELETE – Eliminar**
-
-DELETE se utiliza para quitar una tarea de la lista.
-
-Ejemplo:
+Por ejemplo:
 
 `DELETE /tasks/1`
 
-Luego de ejecutarlo, la tarea `1` ya no deberá existir.
+elimina la tarea con ID `1`.
 
-Si se intenta ejecutar nuevamente un DELETE sobre esa misma tarea, el recurso continuará sin existir y el servidor deberá responder indicando que no fue encontrado, por ejemplo con:
+Después de eliminarla, si se realiza:
+
+`GET /tasks/1`
+
+el servidor responde:
 
 `404 Not Found`
+
+porque la tarea ya no existe.
+
+## Manejo de datos
+
+Las solicitudes y respuestas utilizan formato JSON.
+
+Se utiliza:
+
+* `json.loads()` para leer y convertir los datos JSON recibidos.
+* `json.dumps()` para convertir los datos y generar las respuestas.
+
+Las respuestas del servidor incluyen:
+
+`Content-Type: application/json`
+
+## Archivo
+
+Todo el servidor se encuentra en un único archivo:
+
+`server.py`
+
+## Pruebas
+
+Las pruebas se realizaron utilizando `curl`.
+
+Se comprobó:
+
+1. Obtener todas las tareas.
+2. Crear una tarea.
+3. Consultar una tarea por su ID.
+4. Modificar parcialmente una tarea con PATCH.
+5. Eliminar una tarea con DELETE.
+6. Consultar nuevamente la tarea eliminada y comprobar que devuelve `404 Not Found`.
+
+La evidencia de las pruebas se encuentra en:
+
+`tp_ingenieria.txt`
